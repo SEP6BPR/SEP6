@@ -1,53 +1,47 @@
 import azure.functions as func
 from azure.functions import AsgiMiddleware
+from fastapi import status, HTTPException
+from starlette.status import HTTP_404_NOT_FOUND
 
 from api_app import app
-import pyodbc
-import mimesis
-
-
-
-def get_db_cursor():
-    connection_string = (
-        "Driver={ODBC Driver 17 for SQL Server};"
-        "Server=tcp:sep-6.database.windows.net,1433;"
-        "Database=movieDatabase;"
-        "Uid=michal;"
-        "Pwd=sb2Kr7TCzVZM5dF;"
-        "Encrypt=yes;"
-        "TrustServerCertificate=no;"
-        "Connection Timeout=30;"
-    )
-    connection = pyodbc.connect(connection_string)
-    connection.autocommit = True
-
-    cursor = connection.cursor()
-    return cursor
-
-
+from tmdb_api import get_movie_from_tmdb
+from database import get_movie_list_from_email, get_movie
 
 
 
 @app.get("/")
 def read_root():
-    return {"Hello": "World"}
+    return {"Hello": "Movies"}
 
 
-@app.get("/movie/{id}")
-def get_movie(id: str):
-    db_cursor = get_db_cursor()
-    db_cursor.execute("SELECT * FROM movies WHERE id = {}".format(id))
-    result = db_cursor.fetchone()
-    # result = mimesis.Person()
-    if result is not None:
-        return {
-            "movieid": result.movie_id,
-            "movie_name": result.movie_name,
-            "release_year": result.release_year,
-            "id": result.id,
-        }
+@app.get("/movie/{movie_id}", status_code=status.HTTP_200_OK)
+def get_movie_by_id(movie_id: str):
+    result = get_movie(movie_id)
+    if result != "no movie found":
+        response, content = get_movie_from_tmdb(result.imdb_id)
     else:
-        return {"message": "Movie not found"}
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="Movie with id: {} not found database".format(movie_id))
+
+    if response.status_code != 200:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="Movie with id: {} not found in TMDB".format(movie_id))
+    else:
+        return content
+
+
+@app.get("/user/movie_list/{user_email}")
+def get_users_movie_list(user_email: str):
+    tmdb_movies = []
+    movie_list = get_movie_list_from_email(user_email)
+    if movie_list is not list:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="No movies found for email: {}".format(user_email))
+    else:
+        for movie in movie_list:
+            resp, json = get_movie_from_tmdb(movie)
+            tmdb_movies.append(json)    
+
+        return {
+            "movies": tmdb_movies
+        }
 
 
 def main(req: func.HttpRequest, context: func.Context) -> func.HttpResponse:
