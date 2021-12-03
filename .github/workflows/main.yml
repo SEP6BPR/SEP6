@@ -1,6 +1,6 @@
 # This is a basic workflow to help you get started with Actions
 
-name: CI
+name: Deploy project to Azure Functions 
 
 # Controls when the workflow will run
 on:
@@ -13,29 +13,44 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
+env:
+  AZURE_FUNCTIONAPP_NAME: not-pirate-bay
+  AZURE_FUNCTIONAPP_PACKAGE_PATH: '.' # set this to the path to your web app project, defaults to the repository root
+  PYTHON_VERSION: '3.9'
+
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "build"
-  build:
+  build-and-deploy:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
-
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
         # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+        - name: 'Checkout GitHub Action'
         - uses: actions/checkout@v2
 
-        - name: Setup Python 3.9 Environment
+        - name: 'Setup Python ${{ env.PYTHON_VERSION }} Environment'
           uses: actions/setup-python@v2.3.0
           with:
-            python-version: 3.9
-
-        # Runs a single command using the runners shell
-        - name: Run a one-line script
-          run: echo Hello, world!
+            python-version: ${{ env.PYTHON_VERSION }}    
 
         # Runs a set of commands using the runners shell
-        - name: Run a multi-line script
-          run: |
-            echo Add other actions to build,
-            echo test, and deploy your project.
+        - name: 'Build the function app'
+          shell: bash
+          run: |            
+            echo Deploying Azure Functions...
+            pushd './${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}'
+            python -m pip install --upgrade pip
+            pip install -r requirements.txt --target=".python_packages/lib/site-packages"
+            popd
+            
+        - name: Azure Functions Action
+          uses: Azure/functions-action@v1.4.4
+          with:
+            # Name of the Azure Function App
+            app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
+            # Path to package or folder. *.zip or a folder to deploy
+            package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
+            # Publish profile (*.publishsettings) file contents with web deploy secrets
+            publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}        
