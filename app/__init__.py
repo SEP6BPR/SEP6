@@ -4,8 +4,8 @@ from fastapi import status, HTTPException
 from starlette.status import HTTP_404_NOT_FOUND
 
 from api_app import app
-from tmdb_api import get_movie_from_tmdb, get_movie_list_from_email, get_movie
-# from database.__init__ import get_movie_list_from_email, get_movie
+from tmdb_api import get_movie_from_tmdb
+from database import get_movie_list_from_email, get_movie
 
 
 
