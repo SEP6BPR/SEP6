@@ -5,6 +5,8 @@ sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 import pyodbc
 import logging
 
+logging.Logger.root.level = 10
+
 
 def get_db_cursor():
     connection_string = (
@@ -61,40 +63,44 @@ def get_movie_db(movie_id: str):
         return result
 
 
-def get_user_id_db(user_email:str):
+def get_user_id_db(user_email: str):
     try:
         db_cursor = get_db_cursor()
         db_cursor.execute(
             "SELECT user_id FROM users WHERE email = '{}'".format(user_email)
         )
         result = db_cursor.fetchone()
+        logging.error(result)
     except pyodbc.Error as e:
         # TODO add better error handling
         logging.error("cant get user_id for email: {}".format(user_email))
         return "get_user_id failed"
     else:
-        logging.info("user for email:{} created".format(user_email))
+        logging.error("user for email:{} created".format(user_email))
         return result.user_id
-    
+
 
 def sign_up_sign_in_db(user_email: str):
-    user_id = get_user_id_db(user_email)
-    if user_id == "get_user_id failed":
+    try:
+        db_cursor = get_db_cursor()
+        db_cursor.execute(
+            "INSERT INTO users OUTPUT Inserted.user_id VALUES('{}');".format(user_email)
+        )
+        return "user created", get_user_id_db(user_email)
+
+    except pyodbc.Error as e:
+        # TODO add better error handling
+
         try:
-            db_cursor = get_db_cursor()
-            db_cursor.execute(
-                "INSERT INTO users OUTPUT Inserted.user_id VALUES('{}');".format(user_email)
-            )
-            result = db_cursor.fetchone()
+            user_id = get_user_id_db(user_email)
         except pyodbc.Error as e:
-            # TODO add better error handling
             logging.error("user creation failed for email: {}".format(user_email))
             return "user creation failed", ""
         else:
-            logging.info("user with email:{} created".format(user_email))
-            return "user created", result
-    else:
-        return "user created", user_id
+            return "user retrieved", user_id
+    # else:
+    #     logging.error("user with email:{} created".format(user_email))
+    #     return "user created", get_user_id_db(user_email)
 
 
 def get_lists_for_user(user_email: str):
@@ -104,7 +110,7 @@ def get_lists_for_user(user_email: str):
 def create_list_for_user_db(user_id: int):
     try:
         db_cursor = get_db_cursor()
-        db_cursor.exexute(
+        db_cursor.execute(
             "INSERT INTO user_list_lookup OUTPUT Inserted.movie_list_id VALUES ({})".format(
                 user_id
             )
@@ -125,15 +131,18 @@ def create_list_for_user_db(user_id: int):
 def add_movie_into_list_db(movie_list_id: int, movie_id: int):
     try:
         db_cursor = get_db_cursor()
-        db_cursor.exexute(
-            "INSERT INTO movie_lists OUTPUT Inserted.movie_id, Inserted.list_id VALUES ({list_id},{movie_id})"
-            .format(
+        db_cursor.execute(
+            "INSERT INTO movie_lists OUTPUT Inserted.movie_id, Inserted.list_id VALUES ({list_id},{movie_id})".format(
                 list_id=movie_list_id, movie_id=movie_id
             )
         )
         result = db_cursor.fetchone()
     except pyodbc.Error as e:
-        logging.error("adding movie with id:{} failed for list with id: {}".format(movie_list_id, movie_id))
+        logging.error(
+            "adding movie with id:{} failed for list with id: {}".format(
+                movie_list_id, movie_id
+            )
+        )
     else:
         logging.error(
             "added movie with id:{movie_id} into list with id: {list_id}".format(
@@ -145,5 +154,6 @@ def add_movie_into_list_db(movie_list_id: int, movie_id: int):
 
 def remove_movie_from_list_db(movie_list_id: int, movie_id: int):
     return True
+
 
 # print(create_user("285056@viauc.dk"))

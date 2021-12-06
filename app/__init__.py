@@ -1,4 +1,5 @@
 import azure.functions as func
+import pyodbc
 from azure.functions import AsgiMiddleware
 from fastapi import status, HTTPException
 from starlette.status import (
@@ -7,7 +8,6 @@ from starlette.status import (
     HTTP_404_NOT_FOUND,
     HTTP_409_CONFLICT,
     HTTP_418_IM_A_TEAPOT,
-    HTTP_501_NOT_IMPLEMENTED,
 )
 
 from api_app import app
@@ -65,11 +65,9 @@ def get_movie_by_id(movie_id: str):
 
 @app.get("movie_list/{list_id}", status_code=status.HTTP_200_OK)
 def get_movie_list_by_id(list_id: int):
-    #TODO
-    return {
-        "status": "TODO",
-        "response": HTTP_418_IM_A_TEAPOT
-    }
+    # TODO
+    return {"status": "TODO", "response": HTTP_418_IM_A_TEAPOT}
+
 
 @app.get("/user/movie_list/{user_email}", status_code=HTTP_200_OK)
 def get_users_movie_list(user_email: str):
@@ -104,13 +102,12 @@ def get_user_id(user_email: str):
 
 @app.post("/user/register/{user_email}", status_code=HTTP_201_CREATED)
 def sign_up_sign_in(user_email: str):
-    status, user_id = sign_up_sign_in_db(user_email)
-    if status == "user creation failed":
+    try:
+        status, user_id = sign_up_sign_in_db(user_email)
+    except pyodbc.Error as e:
         raise HTTPException(
             status_code=HTTP_409_CONFLICT,
-            detail="User couldn't be created for email: {}".format(
-                user_email
-            ),
+            detail="User couldn't be created for email: {}".format(user_email),
         )
     else:
         return {
@@ -134,17 +131,14 @@ def create_list_for_user(user_email: str):
         return {
             "response": HTTP_201_CREATED,
             "user_email": user_email,
-            "movie_list_id": user_list
+            "movie_list_id": user_list,
         }
 
 
 @app.post("/user/{user_email}/add_to_list/{list_id}")
 def add_movie_to_list(user_email: str, list_id: int):
-    #TODO
-    return {
-        "status": "TODO",
-        "response": HTTP_418_IM_A_TEAPOT
-    }
+    # TODO
+    return {"status": "TODO", "response": HTTP_418_IM_A_TEAPOT}
 
 
 def main(req: func.HttpRequest, context: func.Context) -> func.HttpResponse:
