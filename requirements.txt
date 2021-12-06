@@ -8,3 +8,4 @@ pyodbc
 fastapi
 mimesis
 requests
+pyjwt
