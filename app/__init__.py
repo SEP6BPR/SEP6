@@ -12,7 +12,7 @@ from starlette.status import (
 
 from api_app import app
 from tmdb_api import get_movie_from_tmdb
-from database.__init__ import (
+from database_api import (
     get_movie_list_from_email_db,
     get_movie_db,
     sign_up_sign_in_db,
