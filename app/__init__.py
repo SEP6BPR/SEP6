@@ -93,11 +93,18 @@ def get_users_movie_list(user_email: str):
 
 @app.get("/user/id/{user_email}", status_code=HTTP_200_OK)
 def get_user_id(user_email: str):
-    return {
-        "response": HTTP_200_OK,
-        "user_id": get_user_id_db(user_email),
-        "user_email": user_email,
-    }
+    user = get_user_id_db(user_email)
+    if user == None or user == "get_user_id failed":
+        raise HTTPException(
+            status_code=HTTP_404_NOT_FOUND,
+            detail="User not found for email: {}".format(user_email),
+        )
+    else:
+        return {
+            "response": HTTP_200_OK,
+            "user_id": user.user_id,
+            "user_email": user_email,
+        }
 
 
 @app.post("/user/register/{user_email}", status_code=HTTP_201_CREATED)
@@ -120,7 +127,7 @@ def sign_up_sign_in(user_email: str):
 
 @app.post("/user/create_list/{user_email}", status_code=HTTP_201_CREATED)
 def create_list_for_user(user_email: str):
-    user_id = get_user_id_db(user_email)
+    user_id = get_user_id_db(user_email)[0]
     user_list = create_list_for_user_db(user_id)
     if user_list == "list not created":
         raise HTTPException(

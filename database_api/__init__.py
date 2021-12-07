@@ -70,14 +70,15 @@ def get_user_id_db(user_email: str):
             "SELECT user_id FROM users WHERE email = '{}'".format(user_email)
         )
         result = db_cursor.fetchone()
-        logging.error(result)
-    except pyodbc.Error as e:
+
+        if result == None:
+            return None
+        else:
+            return result
+    except Exception as e:
         # TODO add better error handling
         logging.error("cant get user_id for email: {}".format(user_email))
         return "get_user_id failed"
-    else:
-        logging.error("user for email:{} created".format(user_email))
-        return result.user_id
 
 
 def sign_up_sign_in_db(user_email: str):
@@ -86,7 +87,9 @@ def sign_up_sign_in_db(user_email: str):
         db_cursor.execute(
             "INSERT INTO users OUTPUT Inserted.user_id VALUES('{}');".format(user_email)
         )
-        return "user created", get_user_id_db(user_email)
+        result = db_cursor.fetchone()
+        print(result)
+        return "user created", result.user_id
 
     except pyodbc.Error as e:
         # TODO add better error handling
@@ -110,13 +113,16 @@ def get_lists_for_user(user_email: str):
 def create_list_for_user_db(user_id: int):
     try:
         db_cursor = get_db_cursor()
+        print(user_id)
         db_cursor.execute(
             "INSERT INTO user_list_lookup OUTPUT Inserted.movie_list_id VALUES ({})".format(
                 user_id
             )
         )
         result = db_cursor.fetchone()
+        print(result)
     except pyodbc.Error as e:
+        print(e)
         logging.error("list creation failed for user: {}".format(user_id))
         return "list not created"
     else:
