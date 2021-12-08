@@ -109,6 +109,7 @@ def get_user_id(user_email: str):
 
 @app.post("/user/register/{user_email}", status_code=HTTP_201_CREATED)
 def sign_up_sign_in(user_email: str):
+    response = ""
     try:
         status, user_id = sign_up_sign_in_db(user_email)
     except pyodbc.Error as e:
@@ -117,8 +118,13 @@ def sign_up_sign_in(user_email: str):
             detail="User couldn't be created for email: {}".format(user_email),
         )
     else:
+        if status == "user created":
+            response = HTTP_201_CREATED
+        elif status == "user retrieved":
+            response = HTTP_200_OK
+
         return {
-            "response": HTTP_201_CREATED,
+            "response": response,
             "status": status,
             "user_email": user_email,
             "user_id": user_id,

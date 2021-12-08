@@ -10,7 +10,7 @@ logging.Logger.root.level = 10
 
 def get_db_cursor():
     connection_string = (
-        "Driver={ODBC Driver 17 for SQL Server};"
+        "Driver={ODBC Driver 13 for SQL Server};"
         "Server=tcp:sep-6.database.windows.net,1433;"
         "Database=movieDatabase;"
         "Uid=michal;"
@@ -82,25 +82,40 @@ def get_user_id_db(user_email: str):
 
 
 def sign_up_sign_in_db(user_email: str):
-    try:
-        db_cursor = get_db_cursor()
+
+    db_cursor = get_db_cursor()
+    db_cursor.execute("SELECT user_id FROM users WHERE email = '{}'".format(user_email))
+    result = db_cursor.fetchone()
+
+    if result == None:
         db_cursor.execute(
             "INSERT INTO users OUTPUT Inserted.user_id VALUES('{}');".format(user_email)
         )
         result = db_cursor.fetchone()
         print(result)
         return "user created", result.user_id
+    else:
+        return "user retrieved", result.user_id
 
-    except pyodbc.Error as e:
-        # TODO add better error handling
+    # try:
+    #     db_cursor = get_db_cursor()
+    #     db_cursor.execute(
+    #         "INSERT INTO users OUTPUT Inserted.user_id VALUES('{}');".format(user_email)
+    #     )
+    #     result = db_cursor.fetchone()
+    #     print(result)
+    #     return "user created", result.user_id
 
-        try:
-            user_id = get_user_id_db(user_email)
-        except pyodbc.Error as e:
-            logging.error("user creation failed for email: {}".format(user_email))
-            return "user creation failed", ""
-        else:
-            return "user retrieved", user_id
+    # except Exception as e:
+    #     # TODO add better error handling
+
+    #     try:
+    #         user_id = get_user_id_db(user_email)
+    #     except pyodbc.Error as e:
+    #         logging.error("user creation failed for email: {}".format(user_email))
+    #         return "user creation failed", ""
+    #     else:
+    #         return "user retrieved", user_id
     # else:
     #     logging.error("user with email:{} created".format(user_email))
     #     return "user created", get_user_id_db(user_email)
