@@ -10,7 +10,7 @@ logging.Logger.root.level = 10
 
 def get_db_cursor():
     connection_string = (
-        "Driver={ODBC Driver 13 for SQL Server};"
+        "Driver={ODBC Driver 17 for SQL Server};"
         "Server=tcp:sep-6.database.windows.net,1433;"
         "Database=movieDatabase;"
         "Uid=michal;"
