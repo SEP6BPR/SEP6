@@ -63,7 +63,7 @@ def get_movie_by_id(movie_id: str):
         return content
 
 
-@app.get("movie_list/{list_id}", status_code=status.HTTP_200_OK)
+@app.get("/movie_list/{list_id}", status_code=status.HTTP_200_OK)
 def get_movie_list_by_id(list_id: int):
     # TODO
     return {"status": "TODO", "response": HTTP_418_IM_A_TEAPOT}
