@@ -9,16 +9,7 @@ logging.Logger.root.level = 10
 
 
 def get_db_cursor():
-    connection_string = (
-        "Driver={ODBC Driver 13 for SQL Server};"
-        "Server=tcp:sep-6.database.windows.net,1433;"
-        "Database=movieDatabase;"
-        "Uid=michal;"
-        "Pwd=sb2Kr7TCzVZM5dF;"
-        "Encrypt=yes;"
-        "TrustServerCertificate=no;"
-        "Connection Timeout=30;"
-    )
+    connection_string = os.environ.get("AZURE_SQL_CONNECTION_STRING")
     connection = pyodbc.connect(connection_string)
     connection.autocommit = True
 
@@ -76,7 +67,6 @@ def get_user_id_db(user_email: str):
         else:
             return result
     except Exception as e:
-        # TODO add better error handling
         logging.error("cant get user_id for email: {}".format(user_email))
         return "get_user_id failed"
 
@@ -96,29 +86,6 @@ def sign_up_sign_in_db(user_email: str):
         return "user created", result.user_id
     else:
         return "user retrieved", result.user_id
-
-    # try:
-    #     db_cursor = get_db_cursor()
-    #     db_cursor.execute(
-    #         "INSERT INTO users OUTPUT Inserted.user_id VALUES('{}');".format(user_email)
-    #     )
-    #     result = db_cursor.fetchone()
-    #     print(result)
-    #     return "user created", result.user_id
-
-    # except Exception as e:
-    #     # TODO add better error handling
-
-    #     try:
-    #         user_id = get_user_id_db(user_email)
-    #     except pyodbc.Error as e:
-    #         logging.error("user creation failed for email: {}".format(user_email))
-    #         return "user creation failed", ""
-    #     else:
-    #         return "user retrieved", user_id
-    # else:
-    #     logging.error("user with email:{} created".format(user_email))
-    #     return "user created", get_user_id_db(user_email)
 
 
 def get_lists_for_user(user_email: str):
@@ -175,6 +142,3 @@ def add_movie_into_list_db(movie_list_id: int, movie_id: int):
 
 def remove_movie_from_list_db(movie_list_id: int, movie_id: int):
     return True
-
-
-# print(create_user("285056@viauc.dk"))
