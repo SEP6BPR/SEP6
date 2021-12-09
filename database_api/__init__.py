@@ -4,6 +4,7 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 import pyodbc
 import logging
+from tmdb_api import get_movie_from_tmdb
 
 logging.Logger.root.level = 10
 
@@ -17,7 +18,8 @@ def get_db_cursor():
     return cursor
 
 
-def get_movie_list_from_email_db(email: str):
+# Get all movies
+def get_movies_from_email_db(email: str):
     movie_ids = []
     db_cursor = get_db_cursor()
     try:
@@ -71,6 +73,42 @@ def get_user_id_db(user_email: str):
         return "get_user_id failed"
 
 
+# Get list_id's associated to the user's email
+def get_users_lists_db(user_email: str):
+    list_ids = []
+    user_id = get_user_id_db(user_email)
+    db_cursor = get_db_cursor()
+    db_cursor.execute(
+        "SELECT movie_list_id FROM user_list_lookup WHERE user_id = {}".format(user_id)
+    )
+    result = db_cursor.fetchall()
+
+    if result == None:
+        return "no lists found"
+    else:
+        for item in result:
+            list_ids.append(item)
+        return list_ids
+
+
+def get_movies_from_list_db(list_id: int):
+    movies_from_list = []
+
+    db_cursor = get_db_cursor()
+    db_cursor.execute(
+        "SELECT movie_id FROM movie_lists WHERE list_id = {}".format(list_id)
+    )
+    result = db_cursor.fetchall()
+
+    if result == None:
+        return "no movies in list"
+    else:
+        for movie_id in result:
+            movies_from_list.append(get_movie_from_tmdb(movie_id))
+
+        return movies_from_list
+
+
 def sign_up_sign_in_db(user_email: str):
 
     db_cursor = get_db_cursor()
@@ -82,29 +120,21 @@ def sign_up_sign_in_db(user_email: str):
             "INSERT INTO users OUTPUT Inserted.user_id VALUES('{}');".format(user_email)
         )
         result = db_cursor.fetchone()
-        print(result)
         return "user created", result.user_id
     else:
         return "user retrieved", result.user_id
 
 
-def get_lists_for_user(user_email: str):
-    user_id = get_user_id_db(user_email)
-
-
 def create_list_for_user_db(user_id: int):
     try:
         db_cursor = get_db_cursor()
-        print(user_id)
         db_cursor.execute(
             "INSERT INTO user_list_lookup OUTPUT Inserted.movie_list_id VALUES ({})".format(
                 user_id
             )
         )
         result = db_cursor.fetchone()
-        print(result)
     except pyodbc.Error as e:
-        print(e)
         logging.error("list creation failed for user: {}".format(user_id))
         return "list not created"
     else:
@@ -125,12 +155,13 @@ def add_movie_into_list_db(movie_list_id: int, movie_id: int):
             )
         )
         result = db_cursor.fetchone()
-    except pyodbc.Error as e:
+    except Exception as e:
         logging.error(
             "adding movie with id:{} failed for list with id: {}".format(
                 movie_list_id, movie_id
             )
         )
+        return "movie not added"
     else:
         logging.error(
             "added movie with id:{movie_id} into list with id: {list_id}".format(
@@ -141,4 +172,24 @@ def add_movie_into_list_db(movie_list_id: int, movie_id: int):
 
 
 def remove_movie_from_list_db(movie_list_id: int, movie_id: int):
-    return True
+    try:
+        db_cursor = get_db_cursor()
+        db_cursor.execute(
+            "DELETE FROM movie_lists WHERE list_id = {list_id} and movie_id = {movie_id}".format(
+                list_id=movie_list_id, movie_id=movie_id
+            )
+        )
+    except Exception as e:
+        logging.error(
+            "removing movie with id:{} failed for list with id: {}".format(
+                movie_list_id, movie_id
+            )
+        )
+        return "movie not removed"
+    else:
+        logging.error(
+            "removed movie with id:{movie_id} into list with id: {list_id}".format(
+                movie_id=movie_id, list_id=movie_list_id
+            )
+        )
+        return "movie removed"
