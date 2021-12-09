@@ -20,10 +20,10 @@ def fix_movie_id(movie_id: int, add_tt: bool):
 
 
 def get_movie_from_tmdb(imdb_id: int):
-    external_id = fix_movie_id(imdb_id, True)
+    external_id = fix_movie_id(imdb_id[0], True)
     URL = external_search_URL.format(external_id=external_id, api_key=tmdb_api_key)
     response = requests.get(url=URL)
     content = json.loads(response._content)
     if response.status_code == 200:
         content["movie_results"][0]["id"] = imdb_id
-    return response, content
+    return response

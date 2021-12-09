@@ -1,3 +1,4 @@
+import json
 import sys
 import os
 
@@ -116,8 +117,7 @@ def get_movies_from_list_db(list_id: int):
         return "no movies in list"
     else:
         for movie_id in result:
-            movies_from_list.append(get_movie_from_tmdb(movie_id))
-
+            movies_from_list.append(json.loads(get_movie_from_tmdb(movie_id)._content))
         return movies_from_list
 
 
