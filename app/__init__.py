@@ -105,7 +105,7 @@ def get_users_movies(user_email: str):
 @app.get("/user/{user_email}/lists", status_code=HTTP_200_OK)
 def get_users_lists(user_email: str):
     users_list_ids = get_users_lists_db(user_email)
-    if users_list_ids == "no lists found":
+    if users_list_ids == "no lists found" or users_list_ids == "no movies found":
         raise HTTPException(
             status_code=HTTP_404_NOT_FOUND,
             detail="No movie lists found for email:{}".format(user_email),

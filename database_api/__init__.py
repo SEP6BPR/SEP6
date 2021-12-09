@@ -75,8 +75,8 @@ def get_user_id_db(user_email: str):
 
 # Get list_id's associated to the user's email
 def get_users_lists_db(user_email: str):
-    list_ids = []
-    user_id = get_user_id_db(user_email)
+    list_ids = {}
+    user_id = get_user_id_db(user_email)[0]
     db_cursor = get_db_cursor()
     db_cursor.execute(
         "SELECT movie_list_id FROM user_list_lookup WHERE user_id = {}".format(user_id)
@@ -87,7 +87,19 @@ def get_users_lists_db(user_email: str):
         return "no lists found"
     else:
         for item in result:
-            list_ids.append(item)
+            # list_ids.append(item[0])
+            db_cursor.execute(
+                "SELECT movie_id FROM movie_lists WHERE list_id = {}".format(item[0])
+            )
+            movies = db_cursor.fetchall()
+
+            if movies == None:
+                return "no movies found"
+            else:
+                list_ids[item[0]] = []
+                for movie_id in movies:
+                    list_ids[item[0]].append(movie_id[0])
+
         return list_ids
 
 
