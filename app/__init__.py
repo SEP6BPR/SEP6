@@ -1,3 +1,4 @@
+from urllib.parse import unquote
 import azure.functions as func
 import pyodbc
 from azure.functions import AsgiMiddleware
@@ -158,10 +159,10 @@ def sign_up_sign_in(user_email: str):
         }
 
 
-@app.post("/user/{user_email}/create_list", status_code=HTTP_201_CREATED)
-def create_list_for_user(user_email: str):
+@app.post("/user/{user_email}/create_list/{list_name}", status_code=HTTP_201_CREATED)
+def create_list_for_user(user_email: str, list_name: str):
     user_id = get_user_id_db(user_email)[0]
-    user_list = create_list_for_user_db(user_id)
+    user_list, movie_list_name = create_list_for_user_db(user_id, list_name)
     if user_list == "list not created":
         raise HTTPException(
             status_code=HTTP_409_CONFLICT,
@@ -172,6 +173,7 @@ def create_list_for_user(user_email: str):
             "response": HTTP_201_CREATED,
             "user_email": user_email,
             "movie_list_id": user_list,
+            "movie_list_name": movie_list_name,
         }
 
 

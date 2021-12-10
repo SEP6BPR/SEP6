@@ -1,6 +1,7 @@
 import json
 import sys
 import os
+from urllib.parse import unquote
 
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 import pyodbc
@@ -137,25 +138,25 @@ def sign_up_sign_in_db(user_email: str):
         return "user retrieved", result.user_id
 
 
-def create_list_for_user_db(user_id: int):
+def create_list_for_user_db(user_id: int, list_name: str = "Movie list"):
     try:
         db_cursor = get_db_cursor()
         db_cursor.execute(
-            "INSERT INTO user_list_lookup OUTPUT Inserted.movie_list_id VALUES ({})".format(
-                user_id
+            "INSERT INTO user_list_lookup OUTPUT Inserted.movie_list_id, Inserted.list_name VALUES ({user_id}, '{list_name}')".format(
+                user_id=user_id, list_name=unquote(list_name)
             )
         )
         result = db_cursor.fetchone()
     except pyodbc.Error as e:
         logging.error("list creation failed for user: {}".format(user_id))
-        return "list not created"
+        return "list not created", ""
     else:
         logging.error(
             "list with id:{list_id} for user: {user_id}".format(
                 user_id=user_id, list_id=result.movie_list_id
             )
         )
-        return result.movie_list_id
+        return result.movie_list_id, result.list_name
 
 
 def add_movie_into_list_db(movie_list_id: int, movie_id: int):
