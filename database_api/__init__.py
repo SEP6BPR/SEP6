@@ -6,7 +6,7 @@ from urllib.parse import unquote
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 import pyodbc
 import logging
-from tmdb_api import get_movie_from_tmdb
+from tmdb_api import get_movie_from_tmdb, fix_movie_id
 
 logging.Logger.root.level = 10
 
@@ -118,7 +118,8 @@ def get_movies_from_list_db(list_id: int):
         return "no movies in list"
     else:
         for movie_id in result:
-            movies_from_list.append(json.loads(get_movie_from_tmdb(movie_id)._content))
+            response, content = get_movie_from_tmdb(fix_movie_id(movie_id[0], True))
+            movies_from_list.append(content)
         return movies_from_list
 
 
