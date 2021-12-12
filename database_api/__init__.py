@@ -11,13 +11,12 @@ from tmdb_api import get_movie_from_tmdb, fix_movie_id
 logging.Logger.root.level = 10
 
 
-def get_db_cursor():
+def get_db_cursor() -> pyodbc.Cursor:
     connection_string = os.environ.get("AZURE_SQL_CONNECTION_STRING")
     connection = pyodbc.connect(connection_string)
     connection.autocommit = True
 
-    cursor = connection.cursor()
-    return cursor
+    return connection.cursor()
 
 
 # Get all movies
@@ -33,9 +32,10 @@ def get_movies_from_email_db(email: str):
         return "no email"
     try:
         db_cursor.execute(
-            "SELECT movie_lists.movie_id FROM ((users INNER JOIN user_list_lookup ON users.user_id = {user_id}) INNER JOIN movie_lists ON movie_lists.list_id = user_list_lookup.movie_list_id and user_list_lookup.user_id = {user_id});".format(
-                user_id=user_id
-            )
+            "SELECT movie_lists.movie_id "
+            "FROM ((users INNER JOIN user_list_lookup ON users.user_id = {user_id}) "
+            "INNER JOIN movie_lists ON movie_lists.list_id = user_list_lookup.movie_list_id "
+            "and user_list_lookup.user_id = {user_id});".format(user_id=user_id)
         )
         result = db_cursor.fetchall()
         for row in result:
@@ -113,7 +113,6 @@ def get_movies_from_list_db(list_id: int):
         "SELECT movie_id FROM movie_lists WHERE list_id = {}".format(list_id)
     )
     result = db_cursor.fetchall()
-
     if result == None:
         return "no movies in list"
     else:
@@ -158,6 +157,20 @@ def create_list_for_user_db(user_id: int, list_name: str = "Movie list"):
             )
         )
         return result.movie_list_id, result.list_name
+
+
+def get_list_name_db(list_id: int):
+    db_cursor = get_db_cursor()
+    db_cursor.execute(
+        "SELECT list_name FROM user_list_lookup WHERE movie_list_id = {}".format(
+            list_id
+        )
+    )
+    result = db_cursor.fetchone()
+    if result == None:
+        return ""
+    else:
+        return result.list_name
 
 
 def add_movie_into_list_db(movie_list_id: int, movie_id: int):
@@ -207,3 +220,16 @@ def remove_movie_from_list_db(movie_list_id: int, movie_id: int):
             )
         )
         return "movie removed"
+
+
+# def get_top10_movies_from_lists():
+#     top10_movies = []
+#     db_cursor = get_db_cursor()
+#     db_cursor.execute(
+#         "SELECT TOP 10 movie_lists.movie_id, COUNT(movie_lists.movie_id) AS 'count' from movie_lists GROUP BY movie_id ORDER BY COUNT(movie_id) DESC"
+#     )
+#     result = db_cursor.fetchall()
+
+
+#     if result != None:
+#         for row in result:

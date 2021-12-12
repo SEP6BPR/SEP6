@@ -24,6 +24,7 @@ from database_api import (
     get_user_id_db,
     get_users_lists_db,
     get_movies_from_list_db,
+    get_list_name_db
 )
 
 
@@ -71,13 +72,19 @@ async def get_movie_by_id(movie_id: str):
 @app.get("/movie_list/{list_id}", status_code=status.HTTP_200_OK)
 async def get_movie_list_content(list_id: int):
     movies_in_list = get_movies_from_list_db(list_id)
+    list_name = get_list_name_db(list_id)
     if movies_in_list == "no movies in list":
         raise HTTPException(
             status_code=HTTP_404_NOT_FOUND,
             detail="No movies found in list with id:{}".format(list_id),
         )
     else:
-        return {"status": HTTP_200_OK, "list_id": list_id, "movies": movies_in_list}
+        return {
+            "status": HTTP_200_OK,
+            "list_id": list_id,
+            "list_name": list_name,
+            "movies": movies_in_list,
+        }
 
 
 @app.get("/user/{user_email}/movies", status_code=HTTP_200_OK)
@@ -158,8 +165,8 @@ async def sign_up_sign_in(user_email: str):
         }
 
 
-@app.post("/user/{user_email}/create_list/{list_name}", status_code=HTTP_201_CREATED)
-async def create_list_for_user(user_email: str, list_name: str):
+@app.post("/user/{user_email}/create_list/", status_code=HTTP_201_CREATED)
+async def create_list_for_user(user_email: str, list_name: str = "Movie list"):
     user_id = get_user_id_db(user_email)[0]
     user_list, movie_list_name = create_list_for_user_db(user_id, list_name)
     if user_list == "list not created":
