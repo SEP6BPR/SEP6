@@ -1,6 +1,5 @@
-import json
-import sys
 import os
+import sys
 from urllib.parse import unquote
 
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
@@ -183,9 +182,10 @@ def add_movie_into_list_db(movie_list_id: int, movie_id: int):
         )
         result = db_cursor.fetchone()
     except Exception as e:
+        # logging.error(e)
         logging.error(
             "adding movie with id:{} failed for list with id: {}".format(
-                movie_list_id, movie_id
+                movie_id, movie_list_id
             )
         )
         return "movie not added"
@@ -222,14 +222,25 @@ def remove_movie_from_list_db(movie_list_id: int, movie_id: int):
         return "movie removed"
 
 
-# def get_top10_movies_from_lists():
-#     top10_movies = []
-#     db_cursor = get_db_cursor()
-#     db_cursor.execute(
-#         "SELECT TOP 10 movie_lists.movie_id, COUNT(movie_lists.movie_id) AS 'count' from movie_lists GROUP BY movie_id ORDER BY COUNT(movie_id) DESC"
-#     )
-#     result = db_cursor.fetchall()
+def get_top10_movies_from_lists_db():
+    top10_movies = []
+    db_cursor = get_db_cursor()
+    db_cursor.execute(
+        "SELECT TOP 10 movie_lists.movie_id, COUNT(movie_lists.movie_id) AS 'count' from movie_lists GROUP BY movie_id ORDER BY COUNT(movie_id) DESC"
+    )
+    result = db_cursor.fetchall()
 
-
-#     if result != None:
-#         for row in result:
+    if result != None:
+        index = 1
+        for row in result:
+            response, movie = get_movie_from_tmdb(fix_movie_id(row.movie_id, True))
+            movie = {
+                "rank": index,
+                "no_of_occurences": row.count,
+                "movie_data": movie["movie_results"][0],
+            }
+            top10_movies.append(movie)
+            index += 1
+        return top10_movies
+    else:
+        raise pyodbc.Error

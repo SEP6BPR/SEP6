@@ -3,3 +3,4 @@
 local.settings.json
 test
 .venv
+database_api/data_populator.py

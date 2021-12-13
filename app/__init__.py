@@ -1,22 +1,19 @@
-from urllib.parse import unquote
+import azure.functions as func
 import azure.functions as func
 import pyodbc
 from azure.functions import AsgiMiddleware
 from fastapi import status, HTTPException
-from starlette import responses
 from starlette.status import (
     HTTP_200_OK,
     HTTP_201_CREATED,
     HTTP_404_NOT_FOUND,
     HTTP_409_CONFLICT,
-    HTTP_418_IM_A_TEAPOT,
 )
 
 from api_app import app
-from tmdb_api import get_movie_from_tmdb
 from database_api import (
     get_movies_from_email_db,
-    get_movie_db,
+    get_top10_movies_from_lists_db,
     sign_up_sign_in_db,
     create_list_for_user_db,
     add_movie_into_list_db,
@@ -24,9 +21,9 @@ from database_api import (
     get_user_id_db,
     get_users_lists_db,
     get_movies_from_list_db,
-    get_list_name_db
+    get_list_name_db,
 )
-
+from tmdb_api import fix_movie_id, get_movie_from_tmdb
 
 tags_metadata = [
     {
@@ -49,17 +46,10 @@ def read_root():
     return {"Hello": "Movies"}
 
 
-@app.get("/movie/{movie_id}", status_code=status.HTTP_200_OK, tags=["Get movie by ID"])
+@app.get("/movie/{movie_id}", status_code=status.HTTP_200_OK)
 async def get_movie_by_id(movie_id: str):
-    result = get_movie_db(movie_id)
-    if result != "no movie found":
-        response, content = get_movie_from_tmdb(result.imdb_id)
-    else:
-        raise HTTPException(
-            status_code=HTTP_404_NOT_FOUND,
-            detail="Movie with id: {} not found database".format(movie_id),
-        )
-
+    imdb_id = fix_movie_id(movie_id, True)
+    response, content = get_movie_from_tmdb(imdb_id)
     if response.status_code != 200:
         raise HTTPException(
             status_code=HTTP_404_NOT_FOUND,
@@ -139,6 +129,17 @@ async def get_user_id(user_email: str):
             "user_id": user.user_id,
             "user_email": user_email,
         }
+
+
+@app.get("/movies/top10", status_code=HTTP_200_OK)
+async def get_top10_movies_in_lists():
+    try:
+        top10 = get_top10_movies_from_lists_db()
+        return top10
+    except Exception:
+        raise HTTPException(
+            status_code=HTTP_404_NOT_FOUND, detail="Couldn't get top 10 movies in lists"
+        )
 
 
 @app.post("/user/{user_email}/register", status_code=HTTP_201_CREATED)
