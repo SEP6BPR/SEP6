@@ -13,6 +13,7 @@ from starlette.status import (
 from api_app import app
 from database_api import (
     get_movies_from_email_db,
+    get_reviews_for_movie_db,
     get_top10_movies_from_lists_db,
     sign_up_sign_in_db,
     create_list_for_user_db,
@@ -140,6 +141,15 @@ async def get_top10_movies_in_lists():
         raise HTTPException(
             status_code=HTTP_404_NOT_FOUND, detail="Couldn't get top 10 movies in lists"
         )
+
+@app.get("/movie/{movie_id}/reviews")
+async def get_reviews_for_movie(movie_id:int):
+    try:
+        reviews = get_reviews_for_movie_db(movie_id)
+        return reviews
+    except HTTPException as e:
+        raise e
+
 
 
 @app.post("/user/{user_email}/register", status_code=HTTP_201_CREATED)

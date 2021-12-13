@@ -1,6 +1,8 @@
 import os
 import sys
 from urllib.parse import unquote
+from fastapi.exceptions import HTTPException
+from starlette.status import HTTP_404_NOT_FOUND
 
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 import pyodbc
@@ -12,13 +14,15 @@ logging.Logger.root.level = 10
 
 def get_db_cursor() -> pyodbc.Cursor:
     connection_string = os.environ.get("AZURE_SQL_CONNECTION_STRING")
+    #TODO remove before push
+    
     connection = pyodbc.connect(connection_string)
     connection.autocommit = True
 
     return connection.cursor()
 
 
-# Get all movies
+# Get all movies from email
 def get_movies_from_email_db(email: str):
     movie_ids = []
     db_cursor = get_db_cursor()
@@ -45,6 +49,7 @@ def get_movies_from_email_db(email: str):
         return "no movies for email"
 
 
+# Get movie from db
 def get_movie_db(movie_id: str):
     try:
         db_cursor = get_db_cursor()
@@ -88,7 +93,6 @@ def get_users_lists_db(user_email: str):
         return "no lists found"
     else:
         for item in result:
-            # list_ids.append(item[0])
             db_cursor.execute(
                 "SELECT movie_id FROM movie_lists WHERE list_id = {}".format(item[0])
             )
@@ -182,7 +186,6 @@ def add_movie_into_list_db(movie_list_id: int, movie_id: int):
         )
         result = db_cursor.fetchone()
     except Exception as e:
-        # logging.error(e)
         logging.error(
             "adding movie with id:{} failed for list with id: {}".format(
                 movie_id, movie_list_id
@@ -244,3 +247,33 @@ def get_top10_movies_from_lists_db():
         return top10_movies
     else:
         raise pyodbc.Error
+
+
+def get_reviews_for_movie_db(movie_id: int):
+
+    db_cursor = get_db_cursor()
+    db_cursor.execute(
+        "SELECT review_id, review_text, user_id, user_name, score, review_date FROM reviews WHERE movie_id = {}".format(
+            movie_id
+        )
+    )
+    result = db_cursor.fetchall()
+
+    if result != None:
+        reviews = []
+        for item in result:
+            review = {
+                "movie_id": movie_id,
+                "review_id": item.review_id,
+                "user_id": item.user_id,
+                "user_name": item.user_name,
+                "score": item.score,
+                "date": item.review_date,
+            }
+            reviews.append(review)
+        return reviews
+    else:
+        return HTTPException(
+            status_code=HTTP_404_NOT_FOUND,
+            detail="No reviews found for movie with id:{}".format(movie_id),
+        )

@@ -9,7 +9,6 @@ sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 
 def get_db_cursor() -> pyodbc.Cursor:
     connection_string = os.environ.get("AZURE_SQL_CONNECTION_STRING")
-    # print(connection_string)
     connection = pyodbc.connect(connection_string)
     connection.autocommit = True
 
