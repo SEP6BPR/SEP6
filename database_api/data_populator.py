@@ -8,7 +8,7 @@ sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 
 
 def get_db_cursor() -> pyodbc.Cursor:
-    connection_string = "Driver={ODBC Driver 13 for SQL Server};Server=tcp:sep-6.database.windows.net,1433;Database=movieDatabase;Uid=michal;Pwd=JsnMSS8iDm7pPRd;Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;"
+    connection_string = ""
     # print(connection_string)
     connection = pyodbc.connect(connection_string)
     connection.autocommit = True
