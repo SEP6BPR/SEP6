@@ -111,7 +111,7 @@ async def get_users_lists(user_email: str):
         )
     else:
         return {
-            "response": HTTP_200_OK,
+            # "response": HTTP_200_OK,
             "user_email": user_email,
             "list_ids": users_list_ids,
         }
@@ -234,7 +234,7 @@ async def remove_movie_from_list(list_id: int, movie_id: int):
 
 @app.post("/review/")
 async def add_review(review: Review):
-    
+
     response = add_review_for_movie_db(review)
     return response
 
