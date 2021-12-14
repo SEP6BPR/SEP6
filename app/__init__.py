@@ -10,8 +10,9 @@ from starlette.status import (
     HTTP_409_CONFLICT,
 )
 
-from api_app import app
+from api_app import Review, app
 from database_api import (
+    add_review_for_movie_db,
     get_movies_from_email_db,
     get_reviews_for_movie_db,
     get_top10_movies_from_lists_db,
@@ -230,6 +231,12 @@ async def remove_movie_from_list(list_id: int, movie_id: int):
             "movie_id": movie_id,
         }
 
+
+@app.post("/review/")
+async def add_review(review: Review):
+    
+    response = add_review_for_movie_db(review)
+    return response
 
 def main(req: func.HttpRequest, context: func.Context) -> func.HttpResponse:
     return AsgiMiddleware(app).handle(req, context)

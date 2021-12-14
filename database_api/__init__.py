@@ -2,7 +2,9 @@ import os
 import sys
 from urllib.parse import unquote
 from fastapi.exceptions import HTTPException
-from starlette.status import HTTP_404_NOT_FOUND
+from starlette.status import HTTP_201_CREATED, HTTP_404_NOT_FOUND
+
+from api_app import Review
 
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 import pyodbc
@@ -14,8 +16,6 @@ logging.Logger.root.level = 10
 
 def get_db_cursor() -> pyodbc.Cursor:
     connection_string = os.environ.get("AZURE_SQL_CONNECTION_STRING")
-    #TODO remove before push
-    
     connection = pyodbc.connect(connection_string)
     connection.autocommit = True
 
@@ -263,11 +263,12 @@ def get_reviews_for_movie_db(movie_id: int):
         reviews = []
         for item in result:
             review = {
-                "movie_id": movie_id,
-                "review_id": item.review_id,
+                "review_text": item.review_text,
                 "user_id": item.user_id,
                 "user_name": item.user_name,
                 "score": item.score,
+                "movie_id": movie_id,
+                "review_id": item.review_id,
                 "date": item.review_date,
             }
             reviews.append(review)
@@ -277,3 +278,27 @@ def get_reviews_for_movie_db(movie_id: int):
             status_code=HTTP_404_NOT_FOUND,
             detail="No reviews found for movie with id:{}".format(movie_id),
         )
+
+
+def add_review_for_movie_db(review: Review):
+    db_cursor = get_db_cursor()
+    db_cursor.execute(
+        "INSERT INTO reviews (review_text, user_id, user_name, score, movie_id) OUTPUT Inserted.review_id, Inserted.movie_id VALUES (?,?,?,?,?);",
+            review.review_text,
+            review.user_id,
+            review.user_name,
+            review.score,
+            review.movie_id,
+    )
+    result = db_cursor.fetchone()
+
+    if result != None:
+        return {
+            "response": HTTP_201_CREATED,
+            "review_id": result.review_id,
+            "movie_id": result.movie_id,
+        }
+    else:
+        return {
+            "response": HTTP_404_NOT_FOUND,
+        }
