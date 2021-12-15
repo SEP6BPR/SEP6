@@ -1,15 +1,16 @@
 import os
 import sys
 from urllib.parse import unquote
+
+from api_app import Review
 from fastapi.exceptions import HTTPException
 from starlette.status import HTTP_201_CREATED, HTTP_404_NOT_FOUND
 
-from api_app import Review
-
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
-import pyodbc
 import logging
-from tmdb_api import get_movie_from_tmdb, fix_movie_id
+
+import pyodbc
+from tmdb_api import fix_movie_id, get_movie_from_tmdb
 
 logging.Logger.root.level = 10
 
@@ -49,19 +50,6 @@ def get_movies_from_email_db(email: str):
         return "no movies for email"
 
 
-# Get movie from db
-def get_movie_db(movie_id: str):
-    try:
-        db_cursor = get_db_cursor()
-        db_cursor.execute("SELECT * FROM movies WHERE movie_id = {}".format(movie_id))
-        result = db_cursor.fetchone()
-    except Exception as e:
-        logging.error("movie lookup failed for movie_id: {}".format(movie_id))
-        return "no movie found"
-    else:
-        return result
-
-
 def get_user_id_db(user_email: str):
     try:
         db_cursor = get_db_cursor()
@@ -94,9 +82,15 @@ def get_users_lists_db(user_email: str):
     else:
         for item in result:
             if item.list_name == None:
-                lists[item.movie_list_id] = "Movie List"
+                lists[item.movie_list_id] = {
+                    "list_name": "Movie List",
+                    "list_id": item.movie_list_id
+                }
             else:
-                lists[item.movie_list_id] = item.list_name
+                lists[item.movie_list_id] = {
+                    "list_name": item.list_name,
+                    "list_id": item.movie_list_id
+                }
 
         return lists
 

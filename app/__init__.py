@@ -1,30 +1,17 @@
 import azure.functions as func
-import azure.functions as func
 import pyodbc
-from azure.functions import AsgiMiddleware
-from fastapi import status, HTTPException
-from starlette.status import (
-    HTTP_200_OK,
-    HTTP_201_CREATED,
-    HTTP_404_NOT_FOUND,
-    HTTP_409_CONFLICT,
-)
-
 from api_app import Review, app
-from database_api import (
-    add_review_for_movie_db,
-    get_movies_from_email_db,
-    get_reviews_for_movie_db,
-    get_top10_movies_from_lists_db,
-    sign_up_sign_in_db,
-    create_list_for_user_db,
-    add_movie_into_list_db,
-    remove_movie_from_list_db,
-    get_user_id_db,
-    get_users_lists_db,
-    get_movies_from_list_db,
-    get_list_name_db,
-)
+from azure.functions import AsgiMiddleware
+from database_api import (add_movie_into_list_db, add_review_for_movie_db,
+                          create_list_for_user_db, get_list_name_db,
+                          get_movies_from_email_db, get_movies_from_list_db,
+                          get_reviews_for_movie_db,
+                          get_top10_movies_from_lists_db, get_user_id_db,
+                          get_users_lists_db, remove_movie_from_list_db,
+                          sign_up_sign_in_db)
+from fastapi import HTTPException, status
+from starlette.status import (HTTP_200_OK, HTTP_201_CREATED,
+                              HTTP_404_NOT_FOUND, HTTP_409_CONFLICT)
 from tmdb_api import fix_movie_id, get_movie_from_tmdb
 
 tags_metadata = [
