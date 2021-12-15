@@ -80,14 +80,14 @@ def get_users_lists_db(user_email: str):
     if result == None:
         return "no lists found"
     else:
-        for item in result:
+        for index, item in enumerate(result):
             if item.list_name == None:
-                lists[item.movie_list_id] = {
+                lists[index] = {
                     "list_name": "Movie List",
                     "list_id": item.movie_list_id
                 }
             else:
-                lists[item.movie_list_id] = {
+                lists[index] = {
                     "list_name": item.list_name,
                     "list_id": item.movie_list_id
                 }
