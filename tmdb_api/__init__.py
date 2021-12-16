@@ -4,7 +4,7 @@ import os
 
 tmdb_api_key = os.environ.get("TMDB_API_KEY")
 
-external_search_URL = "https://api.themoviedb.org/3/find/{external_id}?api_key={api_key}&external_source=imdb_id"
+external_search_URL = "https://api.themoviedb.org/3/movie/{movie_id}?api_key={api_key}"
 
 
 def fix_movie_id(movie_id: int, add_tt: bool):
@@ -19,10 +19,9 @@ def fix_movie_id(movie_id: int, add_tt: bool):
     return movie_id_mod
 
 
-def get_movie_from_tmdb(imdb_id: int):
-    URL = external_search_URL.format(external_id=imdb_id, api_key=tmdb_api_key)
+def get_movie_from_tmdb(movie_id: int):
+    URL = external_search_URL.format(movie_id=movie_id, api_key=tmdb_api_key)
     response = requests.get(url=URL)
     content = json.loads(response._content)
     if response.status_code == 200:
-        content["movie_results"][0]["id"] = imdb_id
-    return response, content
+        return response, content
