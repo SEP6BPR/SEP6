@@ -240,7 +240,7 @@ def get_reviews_for_movie_db(movie_id: int):
 
     db_cursor = get_db_cursor()
     db_cursor.execute(
-        "SELECT review_id, review_text, user_id, user_name, score, review_date FROM reviews WHERE movie_id = {}".format(
+        "SELECT review_id, review_text, user_id, user_name, score, review_date FROM reviews WHERE movie_id = {} ORDER BY review_date DESC".format(
             movie_id
         )
     )
