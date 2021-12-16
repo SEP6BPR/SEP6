@@ -98,9 +98,10 @@ async def get_users_lists(user_email: str):
         )
     else:
         return {
-            # "response": HTTP_200_OK,
+            "response": HTTP_200_OK,
             "user_email": user_email,
-            "list_ids": users_list_ids,
+            "list_name": users_list_ids[0],
+            "list_id": users_list_ids[1],
         }
 
 
@@ -164,22 +165,22 @@ async def sign_up_sign_in(user_email: str):
         }
 
 
-@app.post("/user/{user_email}/create_list/", status_code=HTTP_201_CREATED)
-async def create_list_for_user(user_email: str, list_name: str = "Movie list"):
-    user_id = get_user_id_db(user_email)[0]
-    user_list, movie_list_name = create_list_for_user_db(user_id, list_name)
-    if user_list == "list not created":
-        raise HTTPException(
-            status_code=HTTP_409_CONFLICT,
-            detail="List couldn't be created for user: {}".format(user_email),
-        )
-    else:
-        return {
-            "response": HTTP_201_CREATED,
-            "user_email": user_email,
-            "movie_list_id": user_list,
-            "movie_list_name": movie_list_name,
-        }
+# @app.post("/user/{user_email}/create_list/", status_code=HTTP_201_CREATED)
+# async def create_list_for_user(user_email: str, list_name: str = "Movie list"):
+#     user_id = get_user_id_db(user_email)[0]
+#     user_list, movie_list_name = create_list_for_user_db(user_id, list_name)
+#     if user_list == "list not created":
+#         raise HTTPException(
+#             status_code=HTTP_409_CONFLICT,
+#             detail="List couldn't be created for user: {}".format(user_email),
+#         )
+#     else:
+#         return {
+#             "response": HTTP_201_CREATED,
+#             "user_email": user_email,
+#             "movie_list_id": user_list,
+#             "movie_list_name": movie_list_name,
+#         }
 
 
 @app.post("/add_to_list/{list_id}/movie/{movie_id}")

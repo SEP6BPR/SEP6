@@ -69,30 +69,17 @@ def get_user_id_db(user_email: str):
 
 # Get list_id's associated to the user's email
 def get_users_lists_db(user_email: str):
-    lists = {}
     user_id = get_user_id_db(user_email)[0]
     db_cursor = get_db_cursor()
     db_cursor.execute(
         "SELECT movie_list_id, list_name FROM user_list_lookup WHERE user_id = {}".format(user_id)
     )
-    result = db_cursor.fetchall()
+    result = db_cursor.fetchone()
 
     if result == None:
         return "no lists found"
-    else:
-        for index, item in enumerate(result):
-            if item.list_name == None:
-                lists[index] = {
-                    "list_name": "Movie List",
-                    "list_id": item.movie_list_id
-                }
-            else:
-                lists[index] = {
-                    "list_name": item.list_name,
-                    "list_id": item.movie_list_id
-                }
-
-        return lists
+    else: 
+        return [result.list_name, result.movie_list_id]
 
 
 def get_movies_from_list_db(list_id: int):
@@ -125,6 +112,10 @@ def sign_up_sign_in_db(user_email: str):
         result = db_cursor.fetchone()
         return "user created", result.user_id
     else:
+        users_lists = get_users_lists_db(user_email)
+        if len(users_lists) == 0:
+            create_list_for_user_db(result.user_id, "Movie List")
+
         return "user retrieved", result.user_id
 
 
