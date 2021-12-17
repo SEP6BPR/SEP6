@@ -100,8 +100,7 @@ async def get_users_lists(user_email: str):
         return {
             "response": HTTP_200_OK,
             "user_email": user_email,
-            "list_name": users_list_ids[0],
-            "list_id": users_list_ids[1],
+            "lists": users_list_ids,
         }
 
 

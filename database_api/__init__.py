@@ -69,17 +69,27 @@ def get_user_id_db(user_email: str):
 
 # Get list_id's associated to the user's email
 def get_users_lists_db(user_email: str):
+    lists = []
     user_id = get_user_id_db(user_email)[0]
     db_cursor = get_db_cursor()
     db_cursor.execute(
-        "SELECT movie_list_id, list_name FROM user_list_lookup WHERE user_id = {}".format(user_id)
+        "SELECT movie_list_id, list_name FROM user_list_lookup WHERE user_id = {}".format(
+            user_id
+        )
     )
-    result = db_cursor.fetchone()
+    result = db_cursor.fetchall()
 
     if result == None:
         return "no lists found"
-    else: 
-        return [result.list_name, result.movie_list_id]
+    else:
+        for item in result:
+            lists.append(
+                {
+                    "list_name": item.list_name,
+                    "list_id": item.movie_list_id,
+                }
+            )
+        return lists
 
 
 def get_movies_from_list_db(list_id: int):
@@ -94,7 +104,7 @@ def get_movies_from_list_db(list_id: int):
         return "no movies in list"
     else:
         for movie_id in result:
-            response, content = get_movie_from_tmdb(fix_movie_id(movie_id[0], True))
+            response, content = get_movie_from_tmdb(movie_id[0])
             movies_from_list.append(content)
         return movies_from_list
 
@@ -115,6 +125,9 @@ def sign_up_sign_in_db(user_email: str):
         users_lists = get_users_lists_db(user_email)
         if len(users_lists) == 0:
             create_list_for_user_db(result.user_id, "Movie List")
+            create_list_for_user_db(result.user_id, "Movies Watched")
+        if len(users_lists) == 1:
+            create_list_for_user_db(result.user_id, "Movies Watched")
 
         return "user retrieved", result.user_id
 
@@ -173,10 +186,10 @@ def add_movie_into_list_db(movie_list_id: int, movie_id: int):
     else:
         logging.error(
             "added movie with id:{movie_id} into list with id: {list_id}".format(
-                movie_id=movie_id, list_id=movie_list_id
+                movie_id=result.movie_id, list_id=result.list_id
             )
         )
-        return result.movie_list_id
+        return result.list_id
 
 
 def remove_movie_from_list_db(movie_list_id: int, movie_id: int):
@@ -262,11 +275,11 @@ def add_review_for_movie_db(review: Review):
     db_cursor = get_db_cursor()
     db_cursor.execute(
         "INSERT INTO reviews (review_text, user_id, user_name, score, movie_id) OUTPUT Inserted.review_id, Inserted.movie_id VALUES (?,?,?,?,?);",
-            review.review_text,
-            review.user_id,
-            review.user_name,
-            review.score,
-            review.movie_id,
+        review.review_text,
+        review.user_id,
+        review.user_name,
+        review.score,
+        review.movie_id,
     )
     result = db_cursor.fetchone()
 
