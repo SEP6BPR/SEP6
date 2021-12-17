@@ -125,7 +125,8 @@ async def get_top10_movies_in_lists():
     try:
         top10 = get_top10_movies_from_lists_db()
         return top10
-    except Exception:
+    except Exception as e:
+        # raise(e)
         raise HTTPException(
             status_code=HTTP_404_NOT_FOUND, detail="Couldn't get top 10 movies in lists"
         )

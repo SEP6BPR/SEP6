@@ -227,12 +227,13 @@ def get_top10_movies_from_lists_db():
     if result != None:
         index = 1
         for row in result:
-            response, movie = get_movie_from_tmdb(fix_movie_id(row.movie_id, True))
-            movie = {
-                "rank": index,
-                "no_of_occurences": row.count,
-                "movie_data": movie["movie_results"][0],
-            }
+            response, movie = get_movie_from_tmdb(row.movie_id)
+            # Might be useful at some point but for now its good enough
+            # movie = {
+            #     "rank": index,
+            #     "no_of_occurences": row.count,
+            #     "movie_data": movie,
+            # }
             top10_movies.append(movie)
             index += 1
         return top10_movies
