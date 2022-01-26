@@ -120,8 +120,7 @@ def sign_up_sign_in_db(user_email: str):
             "INSERT INTO users OUTPUT Inserted.user_id VALUES('{}');".format(user_email)
         )
         result = db_cursor.fetchone()
-        return "user created", result.user_id
-    else:
+        
         users_lists = get_users_lists_db(user_email)
         if len(users_lists) == 0:
             create_list_for_user_db(result.user_id, "Movie List")
@@ -129,7 +128,7 @@ def sign_up_sign_in_db(user_email: str):
         if len(users_lists) == 1:
             create_list_for_user_db(result.user_id, "Movies Watched")
 
-        return "user retrieved", result.user_id
+        return "user created", result.user_id
 
 
 def create_list_for_user_db(user_id: int, list_name: str = "Movie list"):
